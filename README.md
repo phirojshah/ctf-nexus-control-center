@@ -1,73 +1,146 @@
-# Welcome to your Lovable project
+# CTF Nexus Control Center
 
-## Project info
+A comprehensive Capture The Flag (CTF) platform built with modern web technologies. This application provides a user-friendly interface for managing CTF challenges, user profiles, and leaderboards.
 
-**URL**: https://lovable.dev/projects/854e4e8b-da45-496a-b5c7-6c7dcb447d53
+## ✨ Features
 
-## How can I edit this code?
+- **User Authentication**: Secure sign-up and login with email/password
+- **Challenge Management**: Create, read, update, and delete CTF challenges
+- **User Roles**: Differentiate between regular users and administrators
+- **Leaderboard**: Track user scores and rankings
+- **Responsive Design**: Works on desktop and mobile devices
+- **Modern UI**: Built with shadcn/ui and Tailwind CSS
 
-There are several ways of editing your application.
+## 🚀 Tech Stack
 
-**Use Lovable**
+- **Frontend**: 
+  - React 18
+  - TypeScript
+  - Vite
+  - shadcn/ui
+  - Tailwind CSS
+  - React Hook Form
+  - Radix UI Primitives
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/854e4e8b-da45-496a-b5c7-6c7dcb447d53) and start prompting.
+- **Backend**:
+  - Supabase (Authentication & Database)
+  - PostgreSQL (via Supabase)
+  - Row Level Security (RLS)
 
-Changes made via Lovable will be committed automatically to this repo.
+## 🛠️ Prerequisites
 
-**Use your preferred IDE**
+- Node.js (v18 or later)
+- npm or yarn
+- Supabase account and project
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## 🏗️ Setup & Installation
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/yourusername/ctf-nexus-control-center.git
+   cd ctf-nexus-control-center
+   ```
 
-Follow these steps:
+2. **Install dependencies**
+   ```bash
+   npm install
+   # or
+   yarn
+   ```
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+3. **Environment Setup**
+   - Create a `.env` file in the root directory
+   - Add your Supabase credentials:
+     ```
+     VITE_SUPABASE_URL=your-supabase-url
+     VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
+     ```
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+4. **Database Setup**
+   - Run the SQL scripts in `supabase/migrations` to set up your database schema
+   - Enable Row Level Security (RLS) and set up appropriate policies
 
-# Step 3: Install the necessary dependencies.
-npm i
+5. **Start the development server**
+   ```bash
+   npm run dev
+   # or
+   yarn dev
+   ```
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+6. **Open in browser**
+   ```
+   http://localhost:5173
+   ```
+
+## 🔒 Authentication
+
+The application uses Supabase Auth for user authentication. The following user roles are supported:
+
+- **Regular Users**: Can view challenges and submit flags
+- **Admins**: Can manage challenges and user accounts
+
+## 📦 Project Structure
+
+```
+ctf-nexus-control-center/
+├── src/
+│   ├── components/     # Reusable UI components
+│   ├── contexts/       # React contexts (Auth, Theme, etc.)
+│   ├── hooks/          # Custom React hooks
+│   ├── lib/            # Utility functions and configurations
+│   ├── pages/          # Page components
+│   └── styles/         # Global styles
+├── public/             # Static assets
+├── supabase/           # Database migrations and SQL scripts
+└── vite.config.ts      # Vite configuration
 ```
 
-**Edit a file directly in GitHub**
+## 📝 Database Schema
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+Key tables:
+- `profiles`: User profiles and authentication
+- `challenges`: CTF challenges with categories and difficulty levels
+- `solves`: Tracks which users have solved which challenges
 
-**Use GitHub Codespaces**
+## 🧪 Running Tests
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+```bash
+npm test
+# or
+yarn test
+```
 
-## What technologies are used for this project?
+## 🚀 Deployment
 
-This project is built with:
+### Vercel (Recommended)
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+1. Push your code to a GitHub repository
+2. Import the repository to Vercel
+3. Add your environment variables
+4. Deploy!
 
-## How can I deploy this project?
+### Netlify
 
-Simply open [Lovable](https://lovable.dev/projects/854e4e8b-da45-496a-b5c7-6c7dcb447d53) and click on Share -> Publish.
+1. Connect your GitHub repository to Netlify
+2. Set the build command: `npm run build` or `yarn build`
+3. Set the publish directory: `dist`
+4. Add your environment variables
+5. Deploy site
 
-## Can I connect a custom domain to my Lovable project?
+## 🤝 Contributing
 
-Yes, you can!
+1. Fork the repository
+2. Create a new branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## 📄 License
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- [shadcn/ui](https://ui.shadcn.com/) for the beautiful components
+- [Supabase](https://supabase.com/) for the amazing backend
+- [Vite](https://vitejs.dev/) for the fast development experience

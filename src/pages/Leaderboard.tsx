@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Trophy, Medal, Award, Crown } from "lucide-react";
@@ -20,54 +19,70 @@ const Leaderboard = () => {
   const [totalUsers, setTotalUsers] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    fetchLeaderboard();
-  }, []);
-
-  const fetchLeaderboard = async () => {
+  const fetchLeaderboard = useCallback(async () => {
+    setIsLoading(true);
     try {
       // Get top 10 users
-      const { data: topUsers, error } = await supabase
+      const { data: topUsersData, error: topUsersError } = await supabase
         .from('profiles')
         .select('id, username, score')
         .order('score', { ascending: false })
         .limit(10);
 
-      if (error) {
-        console.error('Error fetching leaderboard:', error);
-        return;
+      if (topUsersError) {
+        console.error('Error fetching top users:', topUsersError);
+        setLeaderboard([]);
+      } else {
+        const leaderboardWithRanks = topUsersData?.map((u, index) => ({
+          ...u,
+          rank: index + 1,
+        })) || [];
+        setLeaderboard(leaderboardWithRanks);
       }
 
-      // Add rank to each user
-      const leaderboardWithRanks = topUsers?.map((user, index) => ({
-        ...user,
-        rank: index + 1,
-      })) || [];
-
-      setLeaderboard(leaderboardWithRanks);
-
       // Get total user count
-      const { count } = await supabase
+      const { count: totalProfilesCount, error: countError } = await supabase
         .from('profiles')
         .select('*', { count: 'exact', head: true });
 
-      setTotalUsers(count || 0);
+      if (countError) {
+        console.error('Error fetching total users count:', countError);
+        setTotalUsers(0);
+      } else {
+        setTotalUsers(totalProfilesCount || 0);
+      }
 
       // Get current user's rank if logged in
       if (user) {
-        const { data: usersAbove } = await supabase
+        const currentUserScore = user.score; // user is UserProfile, user.score is number
+        const { count: higherRankedCount, error: rankError } = await supabase
           .from('profiles')
-          .select('id', { count: 'exact', head: true })
-          .gt('score', user.score);
+          .select('*', { count: 'exact', head: true })
+          .gt('score', currentUserScore);
 
-        setUserRank((usersAbove?.length || 0) + 1);
+        if (rankError) {
+          console.error('Error fetching user rank:', rankError);
+          setUserRank(null);
+        } else {
+          setUserRank((higherRankedCount || 0) + 1);
+        }
+      } else {
+        setUserRank(null); // No user, so no rank
       }
-    } catch (error) {
-      console.error('Error fetching leaderboard:', error);
+
+    } catch (e) {
+      console.error('Failed to fetch leaderboard data:', e);
+      setLeaderboard([]);
+      setUserRank(null);
+      setTotalUsers(0);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user]); // supabase is a stable import, user is the main dependency.
+
+  useEffect(() => {
+    fetchLeaderboard();
+  }, [fetchLeaderboard]);
 
   const getRankIcon = (rank: number) => {
     switch (rank) {
