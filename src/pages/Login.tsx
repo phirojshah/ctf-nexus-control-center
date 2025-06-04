@@ -9,6 +9,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Shield, AlertCircle } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
+import { useEffect } from "react";
 
 const Login = () => {
   const { login, user } = useAuth();
@@ -19,10 +20,15 @@ const Login = () => {
   const [error, setError] = useState("");
 
   // Redirect if already logged in
+  useEffect(() => {
   if (user) {
     navigate("/dashboard");
-    return null;
   }
+}, [user, navigate]);
+
+if (user) {
+  navigate("/dashboard");
+}
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
