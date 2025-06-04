@@ -1,4 +1,4 @@
-# CTF Nexus Control Center
+# CTF Nexus Control
 
 A comprehensive Capture The Flag (CTF) platform built with modern web technologies. This application provides a user-friendly interface for managing CTF challenges, user profiles, and leaderboards.
 
