@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -13,7 +12,7 @@ import Navbar from "@/components/Navbar";
 import { toast } from "@/hooks/use-toast";
 
 const Profile = () => {
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [editedUsername, setEditedUsername] = useState(user?.username || "");
 
@@ -70,18 +69,18 @@ const Profile = () => {
                     <CardTitle className="text-2xl text-white">{user.username}</CardTitle>
                     <CardDescription className="text-slate-300 flex items-center space-x-2">
                       <Mail className="h-4 w-4" />
-                      <span>{user.email}</span>
+                      <span>{session?.user?.email}</span>
                     </CardDescription>
                   </div>
                 </div>
                 <div className="flex flex-col space-y-2">
-                  <Badge className={user.emailVerified ? "bg-green-600" : "bg-red-600"}>
-                    {user.emailVerified ? "Email Verified" : "Email Pending"}
+                  <Badge className={user.email_verified ? "bg-green-600" : "bg-red-600"}>
+                    {user.email_verified ? "Email Verified" : "Email Pending"}
                   </Badge>
                   <Badge className={user.approved ? "bg-green-600" : "bg-yellow-600"}>
                     {user.approved ? "Approved" : "Pending Approval"}
                   </Badge>
-                  {user.isAdmin && (
+                  {user.is_admin && (
                     <Badge className="bg-red-600">
                       <Shield className="h-3 w-3 mr-1" />
                       Admin
@@ -93,7 +92,7 @@ const Profile = () => {
             <CardContent>
               <div className="flex items-center space-x-2 text-slate-400 mb-4">
                 <Calendar className="h-4 w-4" />
-                <span>Joined {new Date(user.createdAt).toLocaleDateString()}</span>
+                <span>Joined {new Date(user.created_at).toLocaleDateString()}</span>
               </div>
               
               {isEditing ? (

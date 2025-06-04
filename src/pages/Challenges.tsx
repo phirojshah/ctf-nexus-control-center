@@ -168,7 +168,7 @@ const Challenges = () => {
     );
   }
 
-  const canAccessChallenges = user.emailVerified && user.approved;
+  const canAccessChallenges = user.email_verified && user.approved;
 
   if (!canAccessChallenges) {
     return (

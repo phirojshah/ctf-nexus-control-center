@@ -38,7 +38,7 @@ const Navbar = () => {
           <Link to="/leaderboard" className="text-slate-300 hover:text-white transition-colors">
             Leaderboard
           </Link>
-          {user?.isAdmin && (
+          {user?.is_admin && (
             <Link to="/admin" className="text-red-400 hover:text-red-300 transition-colors">
               Admin
             </Link>

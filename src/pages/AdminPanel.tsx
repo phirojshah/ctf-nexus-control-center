@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -96,7 +97,7 @@ const AdminPanel = () => {
   ];
 
   // Check if user is admin
-  if (!user || !user.isAdmin) {
+  if (!user || !user.is_admin) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
         <div className="text-center text-white">
