@@ -1,10 +1,15 @@
-
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Shield, AlertCircle } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
@@ -21,14 +26,10 @@ const Login = () => {
 
   // Redirect if already logged in
   useEffect(() => {
-  if (user) {
-    navigate("/dashboard");
-  }
-}, [user, navigate]);
-
-if (user) {
-  navigate("/dashboard");
-}
+    if (!isLoading && user) {
+      navigate("/dashboard"); // or use window.location.href = "/dashboard";
+    }
+  }, [user, isLoading]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,7 +37,7 @@ if (user) {
     setError("");
 
     const result = await login(email, password);
-    
+
     if (result.error) {
       setError(result.error);
       toast({
@@ -51,7 +52,7 @@ if (user) {
       });
       navigate("/dashboard");
     }
-    
+
     setIsLoading(false);
   };
 
@@ -71,13 +72,17 @@ if (user) {
           {error && (
             <Alert className="mb-4 border-red-500 bg-red-950/50">
               <AlertCircle className="h-4 w-4" />
-              <AlertDescription className="text-red-200">{error}</AlertDescription>
+              <AlertDescription className="text-red-200">
+                {error}
+              </AlertDescription>
             </Alert>
           )}
-          
+
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <Label htmlFor="email" className="text-white">Email</Label>
+              <Label htmlFor="email" className="text-white">
+                Email
+              </Label>
               <Input
                 id="email"
                 type="email"
@@ -88,9 +93,11 @@ if (user) {
                 required
               />
             </div>
-            
+
             <div>
-              <Label htmlFor="password" className="text-white">Password</Label>
+              <Label htmlFor="password" className="text-white">
+                Password
+              </Label>
               <Input
                 id="password"
                 type="password"
@@ -101,24 +108,30 @@ if (user) {
                 required
               />
             </div>
-            
-            <Button 
-              type="submit" 
+
+            <Button
+              type="submit"
               className="w-full bg-gradient-to-r from-purple-500 to-cyan-500 hover:from-purple-600 hover:to-cyan-600"
               disabled={isLoading}
             >
               {isLoading ? "Signing in..." : "Sign In"}
             </Button>
           </form>
-          
+
           <div className="mt-6 text-center">
             <p className="text-slate-400">
               Don't have an account?{" "}
-              <Link to="/register" className="text-cyan-400 hover:text-cyan-300">
+              <Link
+                to="/register"
+                className="text-cyan-400 hover:text-cyan-300"
+              >
                 Sign up
               </Link>
             </p>
-            <Link to="/" className="text-slate-400 hover:text-slate-300 text-sm">
+            <Link
+              to="/"
+              className="text-slate-400 hover:text-slate-300 text-sm"
+            >
               ← Back to home
             </Link>
           </div>
