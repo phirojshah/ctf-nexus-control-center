@@ -1,23 +1,24 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { User, Session } from '@supabase/supabase-js';
 
-interface User {
+interface UserProfile {
   id: string;
-  email: string;
   username: string;
-  emailVerified: boolean;
+  email_verified: boolean;
   approved: boolean;
-  isAdmin: boolean;
+  is_admin: boolean;
   score: number;
-  createdAt: string;
+  created_at: string;
 }
 
 interface AuthContextType {
-  user: User | null;
-  login: (email: string, password: string) => Promise<boolean>;
-  register: (email: string, username: string, password: string) => Promise<boolean>;
-  logout: () => void;
-  verifyEmail: (token: string) => Promise<boolean>;
+  user: UserProfile | null;
+  session: Session | null;
+  login: (email: string, password: string) => Promise<{ error?: string }>;
+  register: (email: string, username: string, password: string) => Promise<{ error?: string }>;
+  logout: () => Promise<void>;
   isLoading: boolean;
 }
 
@@ -32,98 +33,113 @@ export const useAuth = () => {
 };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<UserProfile | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    // Check for existing session
-    const savedUser = localStorage.getItem('ctf_user');
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
+  const fetchUserProfile = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (error) {
+        console.error('Error fetching user profile:', error);
+        return null;
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+      return null;
     }
-    setIsLoading(false);
+  };
+
+  useEffect(() => {
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('Auth state changed:', event, session);
+        setSession(session);
+        
+        if (session?.user) {
+          const profile = await fetchUserProfile(session.user.id);
+          setUser(profile);
+        } else {
+          setUser(null);
+        }
+        
+        setIsLoading(false);
+      }
+    );
+
+    // Check for existing session
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      setSession(session);
+      
+      if (session?.user) {
+        const profile = await fetchUserProfile(session.user.id);
+        setUser(profile);
+      }
+      
+      setIsLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  const login = async (email: string, password: string): Promise<boolean> => {
+  const login = async (email: string, password: string) => {
     try {
-      // Simulate API call
-      console.log('Login attempt:', { email, password });
-      
-      // Mock user data for demo
-      const mockUser: User = {
-        id: '1',
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
-        username: email.split('@')[0],
-        emailVerified: true,
-        approved: email === 'admin@ctf.com' ? true : Math.random() > 0.5,
-        isAdmin: email === 'admin@ctf.com',
-        score: Math.floor(Math.random() * 1000),
-        createdAt: new Date().toISOString(),
-      };
+        password,
+      });
 
-      setUser(mockUser);
-      localStorage.setItem('ctf_user', JSON.stringify(mockUser));
-      return true;
-    } catch (error) {
-      console.error('Login failed:', error);
-      return false;
-    }
-  };
-
-  const register = async (email: string, username: string, password: string): Promise<boolean> => {
-    try {
-      // Simulate API call
-      console.log('Register attempt:', { email, username, password });
-      
-      // Mock registration - user needs email verification
-      const mockUser: User = {
-        id: Date.now().toString(),
-        email,
-        username,
-        emailVerified: false,
-        approved: false,
-        isAdmin: false,
-        score: 0,
-        createdAt: new Date().toISOString(),
-      };
-
-      setUser(mockUser);
-      localStorage.setItem('ctf_user', JSON.stringify(mockUser));
-      return true;
-    } catch (error) {
-      console.error('Registration failed:', error);
-      return false;
-    }
-  };
-
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('ctf_user');
-  };
-
-  const verifyEmail = async (token: string): Promise<boolean> => {
-    try {
-      // Simulate email verification
-      console.log('Email verification:', token);
-      
-      if (user) {
-        const updatedUser = { ...user, emailVerified: true };
-        setUser(updatedUser);
-        localStorage.setItem('ctf_user', JSON.stringify(updatedUser));
+      if (error) {
+        return { error: error.message };
       }
-      return true;
+
+      return {};
     } catch (error) {
-      console.error('Email verification failed:', error);
-      return false;
+      return { error: 'An unexpected error occurred' };
     }
+  };
+
+  const register = async (email: string, username: string, password: string) => {
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            username,
+          },
+          emailRedirectTo: `${window.location.origin}/dashboard`
+        },
+      });
+
+      if (error) {
+        return { error: error.message };
+      }
+
+      return {};
+    } catch (error) {
+      return { error: 'An unexpected error occurred' };
+    }
+  };
+
+  const logout = async () => {
+    await supabase.auth.signOut();
   };
 
   const value = {
     user,
+    session,
     login,
     register,
     logout,
-    verifyEmail,
     isLoading,
   };
 

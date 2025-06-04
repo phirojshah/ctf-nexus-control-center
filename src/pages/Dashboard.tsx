@@ -9,7 +9,15 @@ import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 
 const Dashboard = () => {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
+        <div className="text-white text-xl">Loading...</div>
+      </div>
+    );
+  }
 
   if (!user) {
     return (
@@ -26,7 +34,7 @@ const Dashboard = () => {
   }
 
   const getStatusBadge = () => {
-    if (!user.emailVerified) {
+    if (!user.email_verified) {
       return <Badge variant="destructive" className="bg-red-600"><AlertTriangle className="h-3 w-3 mr-1" />Email Not Verified</Badge>;
     }
     if (!user.approved) {
@@ -35,7 +43,7 @@ const Dashboard = () => {
     return <Badge className="bg-green-600"><CheckCircle className="h-3 w-3 mr-1" />Approved</Badge>;
   };
 
-  const canAccessChallenges = user.emailVerified && user.approved;
+  const canAccessChallenges = user.email_verified && user.approved;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
@@ -49,7 +57,7 @@ const Dashboard = () => {
 
         {/* Status Alerts */}
         <div className="space-y-4 mb-8">
-          {!user.emailVerified && (
+          {!user.email_verified && (
             <Alert className="border-red-500 bg-red-950/50">
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription className="text-red-200">
@@ -58,7 +66,7 @@ const Dashboard = () => {
             </Alert>
           )}
 
-          {user.emailVerified && !user.approved && (
+          {user.email_verified && !user.approved && (
             <Alert className="border-yellow-500 bg-yellow-950/50">
               <Clock className="h-4 w-4" />
               <AlertDescription className="text-yellow-200">
@@ -90,7 +98,7 @@ const Dashboard = () => {
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-slate-400">Email:</span>
-                  <span className="text-white">{user.emailVerified ? "✓" : "✗"}</span>
+                  <span className="text-white">{user.email_verified ? "✓" : "✗"}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-400">Approved:</span>
@@ -98,7 +106,7 @@ const Dashboard = () => {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-400">Admin:</span>
-                  <span className="text-white">{user.isAdmin ? "✓" : "✗"}</span>
+                  <span className="text-white">{user.is_admin ? "✓" : "✗"}</span>
                 </div>
               </div>
             </CardContent>
@@ -174,7 +182,7 @@ const Dashboard = () => {
             </CardContent>
           </Card>
 
-          {user.isAdmin && (
+          {user.is_admin && (
             <Card className="bg-slate-800/50 border-slate-700 hover:bg-slate-800/70 transition-all duration-300">
               <CardHeader>
                 <CardTitle className="text-white">Admin Panel</CardTitle>

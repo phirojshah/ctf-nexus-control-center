@@ -1,34 +1,73 @@
 
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Trophy, Medal, Award, Crown } from "lucide-react";
 import Navbar from "@/components/Navbar";
+import { supabase } from "@/integrations/supabase/client";
 
 interface LeaderboardEntry {
-  rank: number;
+  id: string;
   username: string;
   score: number;
-  solvedChallenges: number;
-  lastSolved: string;
-  country?: string;
+  rank: number;
 }
 
 const Leaderboard = () => {
   const { user } = useAuth();
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [userRank, setUserRank] = useState<number | null>(null);
+  const [totalUsers, setTotalUsers] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const mockLeaderboard: LeaderboardEntry[] = [
-    { rank: 1, username: "CyberNinja", score: 2850, solvedChallenges: 28, lastSolved: "2 hours ago", country: "🇺🇸" },
-    { rank: 2, username: "HackMaster", score: 2720, solvedChallenges: 25, lastSolved: "4 hours ago", country: "🇩🇪" },
-    { rank: 3, username: "CryptoQueen", score: 2650, solvedChallenges: 24, lastSolved: "6 hours ago", country: "🇯🇵" },
-    { rank: 4, username: "BinaryGhost", score: 2400, solvedChallenges: 22, lastSolved: "1 day ago", country: "🇬🇧" },
-    { rank: 5, username: "WebWarrior", score: 2200, solvedChallenges: 20, lastSolved: "1 day ago", country: "🇫🇷" },
-    { rank: 6, username: "ForensicsFox", score: 2100, solvedChallenges: 19, lastSolved: "2 days ago", country: "🇨🇦" },
-    { rank: 7, username: "PwnPanda", score: 1950, solvedChallenges: 18, lastSolved: "2 days ago", country: "🇦🇺" },
-    { rank: 8, username: "ReverseRaven", score: 1850, solvedChallenges: 17, lastSolved: "3 days ago", country: "🇰🇷" },
-    { rank: 9, username: "SqlSlayer", score: 1750, solvedChallenges: 16, lastSolved: "3 days ago", country: "🇧🇷" },
-    { rank: 10, username: "ZeroDay", score: 1650, solvedChallenges: 15, lastSolved: "4 days ago", country: "🇮🇳" },
-  ];
+  useEffect(() => {
+    fetchLeaderboard();
+  }, []);
+
+  const fetchLeaderboard = async () => {
+    try {
+      // Get top 10 users
+      const { data: topUsers, error } = await supabase
+        .from('profiles')
+        .select('id, username, score')
+        .order('score', { ascending: false })
+        .limit(10);
+
+      if (error) {
+        console.error('Error fetching leaderboard:', error);
+        return;
+      }
+
+      // Add rank to each user
+      const leaderboardWithRanks = topUsers?.map((user, index) => ({
+        ...user,
+        rank: index + 1,
+      })) || [];
+
+      setLeaderboard(leaderboardWithRanks);
+
+      // Get total user count
+      const { count } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true });
+
+      setTotalUsers(count || 0);
+
+      // Get current user's rank if logged in
+      if (user) {
+        const { data: usersAbove } = await supabase
+          .from('profiles')
+          .select('id', { count: 'exact', head: true })
+          .gt('score', user.score);
+
+        setUserRank((usersAbove?.length || 0) + 1);
+      }
+    } catch (error) {
+      console.error('Error fetching leaderboard:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const getRankIcon = (rank: number) => {
     switch (rank) {
@@ -56,6 +95,17 @@ const Leaderboard = () => {
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+        <Navbar />
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center text-white text-xl">Loading leaderboard...</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
       <Navbar />
@@ -76,8 +126,8 @@ const Leaderboard = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-yellow-400">1,247</div>
-              <p className="text-sm text-slate-400">Active participants</p>
+              <div className="text-3xl font-bold text-yellow-400">{totalUsers}</div>
+              <p className="text-sm text-slate-400">Registered users</p>
             </CardContent>
           </Card>
 
@@ -85,12 +135,12 @@ const Leaderboard = () => {
             <CardHeader className="pb-2">
               <CardTitle className="text-white flex items-center">
                 <Medal className="h-5 w-5 mr-2 text-cyan-400" />
-                Challenges Solved
+                Active Players
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-cyan-400">8,934</div>
-              <p className="text-sm text-slate-400">Total submissions</p>
+              <div className="text-3xl font-bold text-cyan-400">{leaderboard.filter(u => u.score > 0).length}</div>
+              <p className="text-sm text-slate-400">With points scored</p>
             </CardContent>
           </Card>
 
@@ -103,7 +153,7 @@ const Leaderboard = () => {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-purple-400">
-                {user ? "#42" : "#-"}
+                {user && userRank ? `#${userRank}` : "#-"}
               </div>
               <p className="text-sm text-slate-400">Current position</p>
             </CardContent>
@@ -120,51 +170,56 @@ const Leaderboard = () => {
           </CardHeader>
           <CardContent className="p-0">
             <div className="space-y-1">
-              {mockLeaderboard.map((entry, index) => (
-                <div
-                  key={entry.username}
-                  className={`flex items-center justify-between p-4 rounded-lg transition-all duration-300 hover:scale-[1.02] ${getRankStyle(entry.rank)}`}
-                >
-                  <div className="flex items-center space-x-4">
-                    <div className="flex items-center space-x-2 min-w-[80px]">
-                      {getRankIcon(entry.rank)}
-                      <span className="text-2xl font-bold text-white">#{entry.rank}</span>
-                    </div>
-                    
-                    <div className="flex items-center space-x-3">
-                      {entry.country && <span className="text-2xl">{entry.country}</span>}
-                      <div>
-                        <div className="font-semibold text-white text-lg">{entry.username}</div>
-                        <div className="text-sm text-slate-400">
-                          {entry.solvedChallenges} challenges solved • Last active {entry.lastSolved}
+              {leaderboard.length > 0 ? (
+                leaderboard.map((entry) => (
+                  <div
+                    key={entry.id}
+                    className={`flex items-center justify-between p-4 rounded-lg transition-all duration-300 hover:scale-[1.02] ${getRankStyle(entry.rank)}`}
+                  >
+                    <div className="flex items-center space-x-4">
+                      <div className="flex items-center space-x-2 min-w-[80px]">
+                        {getRankIcon(entry.rank)}
+                        <span className="text-2xl font-bold text-white">#{entry.rank}</span>
+                      </div>
+                      
+                      <div className="flex items-center space-x-3">
+                        <div>
+                          <div className="font-semibold text-white text-lg">
+                            {entry.username}
+                            {user && entry.id === user.id && " (You)"}
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
 
-                  <div className="text-right">
-                    <div className="text-2xl font-bold text-cyan-400">{entry.score.toLocaleString()}</div>
-                    <div className="text-sm text-slate-400">points</div>
+                    <div className="text-right">
+                      <div className="text-2xl font-bold text-cyan-400">{entry.score.toLocaleString()}</div>
+                      <div className="text-sm text-slate-400">points</div>
+                    </div>
                   </div>
+                ))
+              ) : (
+                <div className="text-center py-8 text-slate-400">
+                  <Trophy className="h-16 w-16 mx-auto mb-4 opacity-50" />
+                  <p>No players on the leaderboard yet</p>
                 </div>
-              ))}
+              )}
             </div>
           </CardContent>
         </Card>
 
         {/* User's Position (if logged in and not in top 10) */}
-        {user && (
+        {user && userRank && userRank > 10 && (
           <Card className="mt-6 bg-gradient-to-r from-purple-500/20 to-cyan-500/20 border-purple-500/50">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4">
                   <div className="flex items-center space-x-2">
                     <Award className="h-5 w-5 text-purple-400" />
-                    <span className="text-xl font-bold text-white">#42</span>
+                    <span className="text-xl font-bold text-white">#{userRank}</span>
                   </div>
                   <div>
                     <div className="font-semibold text-white">{user.username} (You)</div>
-                    <div className="text-sm text-slate-300">0 challenges solved • Joined recently</div>
                   </div>
                 </div>
                 <div className="text-right">
