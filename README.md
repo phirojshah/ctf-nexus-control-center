@@ -50,7 +50,7 @@ A comprehensive Capture The Flag (CTF) platform built with modern web technologi
 
 3. **Environment Setup**
    - Create a `.env` file in the root directory
-   - Add your Supabase credentials:
+   - Add your Supabase credential:
      ```
      VITE_SUPABASE_URL=your-supabase-url
      VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
